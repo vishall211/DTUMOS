@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Curitiba Bus: Simple Dwell Time & Travel Time Prototype</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6 md:p-10">
+
+  <div class="max-w-5xl mx-auto space-y-8">
+
+    <!-- Header -->
+    <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold">Curitiba BRT Project</span>
+        <span class="text-xs text-slate-400">Digital Twin for Urban Mobility</span>
+      </div>
+      <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">
+        Bus Dwell Time &amp; Arrival Time Prototype
+      </h1>
+      <p class="text-slate-300 text-sm mt-2 leading-relaxed">
+        A simple, intuitive prototype explaining how we calculate station dwell time from Curitiba bus GPS data and use it to accurately predict next-stop arrival times.
+      </p>
+    </div>
+
+    <!-- 4-Step Flowchart -->
+    <div>
+      <h2 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+        <span>📋</span> Complete 4-Step Flowchart
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+        <!-- Step 1 -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 relative hover:border-sky-500 transition">
+          <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 font-bold flex items-center justify-center text-sm mb-3">1</div>
+          <h3 class="font-semibold text-white text-base">Curitiba GPS Data</h3>
+          <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+            Loads real bus stop sequences, coordinates, and vehicle GPS pings (e.g. Line 021 with 113 stops).
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 relative hover:border-amber-500 transition">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center text-sm mb-3">2</div>
+          <h3 class="font-semibold text-white text-base">Match GPS to Stops</h3>
+          <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+            Sets a 30m platform boundary at each station to detect whether the bus is at a stop or driving on the road.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 relative hover:border-emerald-500 transition ring-1 ring-emerald-500/30">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center text-sm mb-3">3</div>
+          <h3 class="font-semibold text-emerald-400 text-base">Calculate Dwell Time</h3>
+          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+            Separates driving time from station stopping time. Average stop time found: <strong>11.9 seconds</strong>.
+          </p>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 relative hover:border-purple-500 transition">
+          <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 font-bold flex items-center justify-center text-sm mb-3">4</div>
+          <h3 class="font-semibold text-white text-base">Predict Next Arrival</h3>
+          <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+            Adding dwell time to the ETA formula makes arrival predictions <strong>+14.4% more accurate</strong>!
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Live Animated Visual Simulation -->
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-lg">
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+            <span>🚌</span> Interactive Bus Route &amp; Dwell Simulator
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Watch how the bus moves on the road and stops for passenger dwell time</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="togglePlay()" id="playBtn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition">
+            Pause Animation
+          </button>
+          <button onclick="resetAnimation()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-semibold transition">
+            Restart
+          </button>
+        </div>
+      </div>
+
+      <!-- Road Canvas -->
+      <div class="bg-slate-950 border border-slate-700 rounded-xl p-4 relative overflow-hidden">
+        <canvas id="roadCanvas" width="860" height="220" class="w-full"></canvas>
+      </div>
+
+      <!-- Live Bus Status Card -->
+      <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-900 border border-slate-700/80 rounded-xl p-4 text-xs">
+        <div>
+          <span class="text-slate-400">Current Bus State:</span>
+          <div id="bus-state" class="font-bold text-sm text-sky-400 mt-0.5">Moving on Road</div>
+        </div>
+        <div>
+          <span class="text-slate-400">Station Dwell Time:</span>
+          <div id="dwell-display" class="font-bold text-sm text-amber-400 mt-0.5">12.0 seconds</div>
+        </div>
+        <div>
+          <span class="text-slate-400">ETA to Next Stop:</span>
+          <div id="eta-display" class="font-bold text-sm text-emerald-400 mt-0.5">38 seconds</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Curitiba Real Data Numbers -->
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+      <h2 class="text-lg font-semibold text-white mb-2">📊 Real Results from Curitiba Bus Line 021</h2>
+      <p class="text-xs text-slate-400 mb-5">These numbers are calculated directly from the Curitiba dataset in our Minimum Working Example:</p>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div class="bg-slate-900 border border-slate-700/60 rounded-xl p-4">
+          <div class="text-2xl font-bold text-amber-400">11.9 s</div>
+          <div class="text-xs text-slate-300 font-medium mt-1">Average Dwell Time</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Per bus stop</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-700/60 rounded-xl p-4">
+          <div class="text-2xl font-bold text-sky-400">81.0 %</div>
+          <div class="text-xs text-slate-300 font-medium mt-1">Moving on Road</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Driving between stops</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-700/60 rounded-xl p-4">
+          <div class="text-2xl font-bold text-amber-400">19.0 %</div>
+          <div class="text-xs text-slate-300 font-medium mt-1">Stopped at Stations</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Passenger boarding</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-700/60 rounded-xl p-4">
+          <div class="text-2xl font-bold text-emerald-400">+14.4 %</div>
+          <div class="text-xs text-slate-300 font-medium mt-1">ETA Accuracy Gain</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">With dwell time included</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How to run it -->
+    <div class="p-5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-400">
+      <div class="font-semibold text-slate-200 mb-1">💡 How to Run the Python Code:</div>
+      <div>Run this simple command in your terminal from the project root:</div>
+      <div class="font-mono bg-slate-900 text-emerald-400 p-2.5 rounded-lg mt-2 border border-slate-800">
+        .venv/bin/python3 Current/simple_mwe.py
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Simulation JavaScript -->
+  <script>
+    const canvas = document.getElementById('roadCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const stops = [
+      { name: "Stop 1", x: 90, dwell: 12 },
+      { name: "Stop 2", x: 330, dwell: 12 },
+      { name: "Stop 3", x: 570, dwell: 12 },
+      { name: "Stop 4", x: 790, dwell: 12 }
+    ];
+
+    let busX = 90;
+    let currentStopIdx = 0;
+    let isDwelling = true;
+    let dwellRemaining = 12.0;
+    let isPlaying = true;
+    let speed = 2.0;
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw Road
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(40, 110, 780, 50);
+      
+      // Road centerline dashes
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([12, 10]);
+      ctx.beginPath();
+      ctx.moveTo(40, 135);
+      ctx.lineTo(820, 135);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Draw Stops
+      for (let i = 0; i < stops.length; i++) {
+        const s = stops[i];
+        
+        // Platform Zone (30m buffer)
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.18)';
+        ctx.fillRect(s.x - 25, 75, 50, 100);
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(s.x - 25, 75, 50, 100);
+
+        // Stop Marker / Shelter
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(s.x, 80, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText(s.name, s.x - 18, 60);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '10px sans-serif';
+        ctx.fillText("Stop Zone", s.x - 22, 190);
+      }
+
+      // Draw Bus
+      ctx.save();
+      ctx.translate(busX, 135);
+
+      // Bus Body
+      ctx.fillStyle = isDwelling ? '#f59e0b' : '#10b981';
+      ctx.beginPath();
+      ctx.roundRect(-22, -14, 44, 28, 5);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Bus Windows
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(-15, -11, 10, 8);
+      ctx.fillRect(-2, -11, 10, 8);
+      ctx.fillRect(11, -11, 8, 8);
+
+      // Bus Headlights
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(18, 5, 4, 5);
+      ctx.restore();
+
+      // Animation Update
+      if (isPlaying) {
+        if (isDwelling) {
+          dwellRemaining -= 0.15;
+          document.getElementById('bus-state').innerHTML = `<span class="text-amber-400">At ${stops[currentStopIdx].name} (Dwell: Boarding)</span>`;
+          document.getElementById('dwell-display').innerText = Math.max(0, dwellRemaining).toFixed(1) + " s remaining";
+          document.getElementById('eta-display').innerText = "Stopped at Station";
+
+          if (dwellRemaining <= 0) {
+            isDwelling = false;
+            currentStopIdx = (currentStopIdx + 1) % stops.length;
+            if (currentStopIdx === 0) {
+              busX = stops[0].x;
+              isDwelling = true;
+              dwellRemaining = 12.0;
+            }
+          }
+        } else {
+          const targetX = stops[currentStopIdx].x;
+          busX += speed;
+
+          const distLeft = Math.max(0, targetX - busX);
+          const etaSec = Math.round(distLeft / (speed * 10));
+
+          document.getElementById('bus-state').innerHTML = `<span class="text-emerald-400">Driving to ${stops[currentStopIdx].name}</span>`;
+          document.getElementById('dwell-display').innerText = "0.0 s (Moving)";
+          document.getElementById('eta-display').innerText = etaSec + " s";
+
+          if (busX >= targetX) {
+            busX = targetX;
+            isDwelling = true;
+            dwellRemaining = 12.0;
+          }
+        }
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      document.getElementById('playBtn').innerText = isPlaying ? "Pause Animation" : "Resume Animation";
+    }
+
+    function resetAnimation() {
+      busX = stops[0].x;
+      currentStopIdx = 0;
+      isDwelling = true;
+      dwellRemaining = 12.0;
+      isPlaying = true;
+      document.getElementById('playBtn').innerText = "Pause Animation";
+    }
+
+    draw();
+  </script>
+</body>
+</html>

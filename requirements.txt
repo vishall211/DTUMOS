@@ -1,0 +1,10 @@
+# Data processing
+pandas>=2.2.0
+numpy>=1.26.0
+pyarrow>=15.0.0
+
+# Optimization for dwell time calculation
+scipy>=1.12.0
+
+# For downloading Curitiba data from Hugging Face (optional)
+huggingface_hub>=0.20.0
