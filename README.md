@@ -21,10 +21,15 @@ Standard transit apps usually predict bus arrival times using simple distance an
 │   │   ├── FLOWCHART.md          # 4-step diagram of how the system works
 │   │   └── data/                 # Sample data for route 021
 │   │
-│   └── 2_Segment Travel Times & Features – Oct 2026/
-│       ├── extract_segment_features.py     # Generates 5-minute road features
-│       ├── segment_features_5min.parquet   # Dataset for training ML models
-│       └── segment_features_sample.csv     # 100-row preview in CSV
+│   ├── 2_Segment Travel Times & Features – Oct 2026/
+│   │   ├── extract_segment_features.py     # Generates 5-minute road features
+│   │   ├── segment_features_5min.parquet   # Prototype dataset (~549 runs)
+│   │   └── segment_features_sample.csv     # 100-row preview in CSV
+│   │
+│   └── 3_Full Scale Features & Preprocessing – Oct 2026/
+│       ├── build_full_dataset.py           # Full-scale pipeline script
+│       ├── full_segment_features_5min.parquet # Production dataset (118,386 runs, ~3.1 MB)
+│       └── full_segment_features_sample.csv   # 100-row preview in CSV
 │
 ├── Code/                         # Dataset preparation scripts
 ├── Datasets/                     # Local data folder (git-ignored, contains full ~5GB Curitiba dataset)
